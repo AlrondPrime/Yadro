@@ -5,12 +5,19 @@
 
 class BinaryTape : public TapeInterface {
 public:
-    explicit BinaryTape(std::string_view path) : TapeInterface(4) {
-        _fs.open(path);
-    }
+    explicit BinaryTape(std::string_view path) :
+            TapeInterface() {
+        _record_size = 4;
+        _path = path;
 
-    ~BinaryTape() {
-        _fs.close();
+        _fs.open(_path);
+        if (!_fs.is_open()) {
+            std::string msg;
+            msg.append("File \'");
+            msg.append(path);
+            msg.append("\' is not opened");
+            throw std::runtime_error(msg);
+        }
     }
 
     int32_t read() override {
@@ -45,13 +52,13 @@ public:
         backward();
     }
 
-    auto pos(){
+    auto pos() {
         return _fs.tellp();
     }
 
     void forward() override {
         auto pos = _fs.tellp();
-        pos += _RECORD_SIZE;
+        pos += _record_size;
         _fs.seekp(pos);
     }
 
@@ -59,13 +66,13 @@ public:
         auto pos = _fs.tellp();
         if (pos == 0)
             return;
-        pos -= _RECORD_SIZE;
+        pos -= _record_size;
         _fs.seekp(pos);
     }
 
     void rewind(int32_t val) override {
         auto pos = _fs.tellp();
-        pos += _RECORD_SIZE * val;
+        pos += _record_size * val;
         if (pos < 0)
             return;
         _fs.seekp(pos);

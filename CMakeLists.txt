@@ -8,8 +8,7 @@ project(Yadro)
 set(CMAKE_CXX_STANDARD 17)
 set(PCH src/pch.h)
 set(SOURCE_FILES
-        src/main.cpp
-        src/Tape.hpp)
+        src/main.cpp)
 
 add_executable(Yadro ${SOURCE_FILES})
 target_precompile_headers(Yadro

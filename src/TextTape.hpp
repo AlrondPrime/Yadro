@@ -5,22 +5,30 @@
 
 class TextTape : public TapeInterface {
 public:
-    explicit TextTape(std::string_view path) : TapeInterface(12) {
-        _fs.open(path);
-    }
+    explicit TextTape(std::string_view path) :
+            TapeInterface() {
+        _record_size = 13;
+        _path = path;
 
-    ~TextTape() {
-        _fs.close();
+        _fs.open(_path);
+        if (!_fs.is_open()) {
+            std::string msg;
+            msg.append("File \'");
+            msg.append(path);
+            msg.append("\' is not opened");
+            throw std::runtime_error(msg);
+        }
     }
 
     int32_t read() override {
+        if (_fs.eof())
+            std::cerr << "EOF" << std::endl;
         auto pos = _fs.tellp();
         if (!_fs.is_open()) {
-            std::cout << "File is not opened" << std::endl;
-            return {};
+            throw std::runtime_error("File is not opened");
         }
 
-        int32_t val;
+        int32_t val{};
         _fs >> val;
 
         _fs.seekp(pos);
@@ -28,15 +36,18 @@ public:
     }
 
     void write(int32_t val) override {
+        if (_fs.eof())
+            _fs.clear();
+
         auto pos = _fs.tellp();
         if (!_fs.is_open()) {
-            std::cout << "File is not opened" << std::endl;
-            return;
+            throw std::runtime_error("File is not opened");
         }
 
         _fs << ((val < 0) ? '-' : '+')
             << std::setw(10) << std::setfill('0') << abs(val)
             << '\n';
+
         _fs.seekp(pos);
     }
 
@@ -46,7 +57,7 @@ public:
 
     void forward() override {
         auto pos = _fs.tellp();
-        pos += _RECORD_SIZE;
+        pos += _record_size;
         _fs.seekp(pos);
     }
 
@@ -54,18 +65,17 @@ public:
         auto pos = _fs.tellp();
         if (pos == 0)
             return;
-        pos -= _RECORD_SIZE;
+        pos -= _record_size;
         _fs.seekp(pos);
     }
 
     void rewind(int32_t val) override {
         auto pos = _fs.tellp();
-        pos += _RECORD_SIZE * val;
+        pos += _record_size * val;
         if (pos < 0)
             return;
         _fs.seekp(pos);
     }
-
 };
 
 #endif //YADRO_TEXTTAPE_HPP

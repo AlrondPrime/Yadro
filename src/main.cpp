@@ -1,18 +1,35 @@
-#include "pch.h"
-#include "TextTape.hpp"
 #include "BinaryTape.hpp"
+#include "TextTape.hpp"
+#include "MergeSort.hpp"
 
 // int32_t : -2147483648 ~ 2147483647
 int main() {
-    BinaryTape tape{"../tape.bin"};
-//    TextTape tape{"../tape.txt"};
+    try {
+        // Generate some test data
+        {
+            TextTape textTape{"../tapeIn.txt"};
+            textTape.clear();
 
-    tape.write(-9999);
-    tape.forward();
-    tape.write(2147483647);
-    std::cout << "Val: " << tape.read() << std::endl;
-    tape.backward();
-    std::cout << "Val: " << tape.read() << std::endl;
+            textTape.write(256);
+            textTape.forward();
+            textTape.write(999);
+            textTape.forward();
+            textTape.write(128);
+            textTape.forward();
+            textTape.write(128);
+            textTape.forward();
+            textTape.write(323);
+            textTape.forward();
+            textTape.write(-299);
+            textTape.forward();
+            textTape.write(-1000);
+        }
+
+        MergeSort::sort("../tapeIn.txt", "../tapeOut.txt");
+    }
+    catch (std::exception &e) {
+        std::cerr << e.what() << std::endl;
+    }
 
     return 0;
 }
