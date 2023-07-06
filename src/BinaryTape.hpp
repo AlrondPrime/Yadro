@@ -4,6 +4,28 @@
 #include "TapeInterface.hpp"
 
 class BinaryTape : public TapeInterface {
+protected:
+    int _cell_size{};
+    std::fstream _fs{};
+    std::string_view _path{};
+    double _read_delay{}, _write_delay{}, _rewind_delay{}, _move_delay{};
+
+    void cur_sym() {
+        std::cout << "Current symbol:"
+                  << "\'" << (char) _fs.peek() << "\'"
+                  << std::endl;
+    }
+
+    void cur_state() {
+        std::cout << "Current state:"
+                  << "\tGood:" << _fs.good()
+                  << "\tBad:" << _fs.bad()
+                  << "\tFail:" << _fs.fail()
+                  << "\tEOF:" << _fs.eof()
+                  << "\tPos:" << _fs.tellp()
+                  << std::endl;
+    }
+
 public:
     explicit BinaryTape(std::string_view path) :
             TapeInterface() {
