@@ -20,18 +20,22 @@ private:
 
     static void split() {
         _sorted = true;
+        tmp_1->cells_written = 0;
+        tmp_2->cells_written = 0;
+        std::cout << "tmp_3->cells_written=" << tmp_3->cells_written << std::endl;
         curr_tmp_tape = tmp_1;
 
         int32_t prev_val, next_val;
         prev_val = curr_in_tape->read();
         curr_in_tape->forward();
-        std::cout << "Read prev_val:" << prev_val << std::endl;
         curr_tmp_tape->write(prev_val);
         curr_tmp_tape->forward();
-        while (!curr_in_tape->isEnd()) {
+        ++curr_tmp_tape->cells_written;
+
+        while (!curr_in_tape->end() && !curr_in_tape->logicalEnd()) {
             next_val = curr_in_tape->read();
             curr_in_tape->forward();
-            std::cout << "Read next_val:" << next_val << std::endl;
+            ++curr_in_tape->current_cell;
 
             if (next_val < prev_val) {
                 _sorted = false;
@@ -41,44 +45,58 @@ private:
             prev_val = next_val;
             curr_tmp_tape->write(prev_val);
             curr_tmp_tape->forward();
+            ++curr_tmp_tape->cells_written;
         }
     }
 
     static void merge() {
         int32_t first_val, second_val;
+        tmp_3->cells_written = 0;
+        std::cout << "tmp_1->cells_written=" << tmp_1->cells_written << std::endl;
+        std::cout << "tmp_2->cells_written=" << tmp_2->cells_written << std::endl;
 
-        while (!tmp_1->isEnd() && !tmp_2->isEnd()) {
+        while (!tmp_1->end() && !tmp_2->end() &&
+               !tmp_1->logicalEnd() && !tmp_2->logicalEnd()) {
             first_val = tmp_1->read();
             second_val = tmp_2->read();
 
             if (first_val < second_val) {
-                std::cout << "Writing first value:"
-                          << first_val << std::endl;
                 tmp_3->write(first_val);
                 tmp_3->forward();
+                ++tmp_3->cells_written;
 
                 tmp_1->forward();
+                ++tmp_1->current_cell;
             } else {
-                std::cout << "Writing second value:"
-                          << second_val << std::endl;
                 tmp_3->write(second_val);
                 tmp_3->forward();
+                ++tmp_3->cells_written;
 
                 tmp_2->forward();
+                ++tmp_2->current_cell;
             }
         }
+
         std::cout << "One of tapes is over" << std::endl;
-        while (!tmp_1->isEnd()) {
+
+        while (!tmp_1->end() && !tmp_1->logicalEnd()) {
             first_val = tmp_1->read();
             tmp_1->forward();
+            ++tmp_1->current_cell;
+
             tmp_3->write(first_val);
             tmp_3->forward();
+            ++tmp_3->cells_written;
         }
-        while (!tmp_2->isEnd()) {
+
+        while (!tmp_2->end() && !tmp_2->logicalEnd()) {
             second_val = tmp_2->read();
             tmp_2->forward();
+            ++tmp_2->current_cell;
+
             tmp_3->write(second_val);
             tmp_3->forward();
+            ++tmp_3->cells_written;
         }
     }
 
@@ -103,8 +121,9 @@ public:
         tmp_3->clear();
 
         // Load data from input tape into 2 temp tapes
+        in->cells_written = std::numeric_limits<uint64_t>::max();
         curr_in_tape = in;
-        std::cout << "\nSplitting" << std::endl;
+        std::cout << "\tSplitting" << std::endl;
         split();
         curr_in_tape = tmp_3;
 
@@ -114,19 +133,20 @@ public:
             std::cout << "\tMerging" << std::endl;
             tmp_1->rewindToBegin();
             tmp_2->rewindToBegin();
-            tmp_3->clear();
+            tmp_3->rewindToBegin();
             merge();
             std::cout << "\tSplitting" << std::endl;
-            tmp_1->clear();
-            tmp_2->clear();
+            tmp_1->rewindToBegin();
+            tmp_2->rewindToBegin();
             tmp_3->rewindToBegin();
             split();
         }
 
         // Sorted, writing into output file
         tmp_3->rewindToBegin();
-        while (!tmp_3->isEnd()) {
+        while (!tmp_3->end() && !tmp_3->logicalEnd()) {
             out->write(tmp_3->read());
+            ++out->cells_written;
             out->forward();
             tmp_3->forward();
         }

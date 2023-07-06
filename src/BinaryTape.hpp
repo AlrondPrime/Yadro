@@ -7,7 +7,7 @@ class BinaryTape : public TapeInterface {
 public:
     explicit BinaryTape(std::string_view path) :
             TapeInterface() {
-        _record_size = 4;
+        _cell_size = 4;
         _path = path;
 
         _fs.open(_path);
@@ -58,7 +58,7 @@ public:
 
     void forward() override {
         auto pos = _fs.tellp();
-        pos += _record_size;
+        pos += _cell_size;
         _fs.seekp(pos);
     }
 
@@ -66,13 +66,13 @@ public:
         auto pos = _fs.tellp();
         if (pos == 0)
             return;
-        pos -= _record_size;
+        pos -= _cell_size;
         _fs.seekp(pos);
     }
 
     void rewind(int32_t val) override {
         auto pos = _fs.tellp();
-        pos += _record_size * val;
+        pos += _cell_size * val;
         if (pos < 0)
             return;
         _fs.seekp(pos);

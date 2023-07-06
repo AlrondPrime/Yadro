@@ -5,15 +5,19 @@
 
 class TapeInterface {
 protected:
-    int _record_size;
+    int _cell_size;
     std::fstream _fs;
     std::string_view _path;
-    uint64_t _processed_bytes;
 
 public:
+    // Amount of written cells in last write session
+    uint64_t cells_written{0};
+    // Current cell
+    uint64_t current_cell{0};
+
     void cur_sym() {
         std::cout << "Current symbol:"
-                  << "\'" << (char)_fs.peek() << "\'"
+                  << "\'" << (char) _fs.peek() << "\'"
                   << std::endl;
     }
 
@@ -27,7 +31,7 @@ public:
                   << std::endl;
     }
 
-    virtual ~TapeInterface(){
+    virtual ~TapeInterface() {
         _fs.close();
     }
 
@@ -46,16 +50,25 @@ public:
         _fs.open(_path, std::fstream::out | std::fstream::trunc);
         _fs.close();
         _fs.open(_path);
+        current_cell = 0;
+        cells_written = 0;
     }
 
     virtual void rewindToBegin() {
         if (_fs.eof())
             _fs.clear();
         _fs.seekp(0);
+        current_cell = 0;
     }
 
-    virtual bool isEnd() {
+    virtual bool end() {
         return _fs.peek() == EOF;
+    }
+
+    virtual bool logicalEnd() {
+        std::cout << "\tcurrent_cell=" << current_cell
+                  << "; cells_written=" << cells_written << std::endl;
+        return current_cell >= cells_written;
     }
 };
 

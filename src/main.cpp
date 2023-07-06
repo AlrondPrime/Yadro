@@ -10,19 +10,19 @@ int main() {
             TextTape textTape{"../tapeIn.txt"};
             textTape.clear();
 
-            textTape.write(256);
+            textTape.write(1);
             textTape.forward();
-            textTape.write(999);
+            textTape.write(7);
             textTape.forward();
-            textTape.write(128);
+            textTape.write(2);
             textTape.forward();
-            textTape.write(128);
+            textTape.write(6);
             textTape.forward();
-            textTape.write(323);
+            textTape.write(3);
             textTape.forward();
-            textTape.write(-299);
+            textTape.write(5);
             textTape.forward();
-            textTape.write(-1000);
+            textTape.write(4);
         }
 
         MergeSort::sort("../tapeIn.txt", "../tapeOut.txt");

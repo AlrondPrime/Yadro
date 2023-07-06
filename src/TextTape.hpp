@@ -7,7 +7,7 @@ class TextTape : public TapeInterface {
 public:
     explicit TextTape(std::string_view path) :
             TapeInterface() {
-        _record_size = 13;
+        _cell_size = 13;
         _path = path;
 
         _fs.open(_path);
@@ -30,12 +30,14 @@ public:
 
         int32_t val{};
         _fs >> val;
+        std::cout << "Reading value=" << val << std::endl;
 
         _fs.seekp(pos);
         return val;
     }
 
     void write(int32_t val) override {
+        std::cout << "Writing value=" << val << std::endl;
         if (_fs.eof())
             _fs.clear();
 
@@ -57,7 +59,7 @@ public:
 
     void forward() override {
         auto pos = _fs.tellp();
-        pos += _record_size;
+        pos += _cell_size;
         _fs.seekp(pos);
     }
 
@@ -65,13 +67,14 @@ public:
         auto pos = _fs.tellp();
         if (pos == 0)
             return;
-        pos -= _record_size;
+        pos -= _cell_size;
         _fs.seekp(pos);
+        --current_cell;
     }
 
     void rewind(int32_t val) override {
         auto pos = _fs.tellp();
-        pos += _record_size * val;
+        pos += _cell_size * val;
         if (pos < 0)
             return;
         _fs.seekp(pos);
