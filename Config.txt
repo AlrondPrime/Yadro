@@ -1,4 +1,5 @@
-readDelay=0.01
-writeDelay=0.01
-rewindDelay=0.01
-moveDelay=0.01
+# Delays in milliseconds
+readDelay=0
+writeDelay=0
+rewindDelay=0
+moveDelay=0.0

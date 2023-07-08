@@ -1,28 +1,31 @@
 #ifndef YADRO_MERGESORT_HPP
 #define YADRO_MERGESORT_HPP
 
-#include "BinaryTape.hpp"
-#include "TextTape.hpp"
-#include "MergeSort.hpp"
+#include "Tape.hpp"
 
 class MergeSort {
 private:
     static bool _sorted;
-    static std::shared_ptr<TextTape> in;
-    static std::unique_ptr<TextTape> out;
+    static std::shared_ptr<Tape> in;
+    static std::unique_ptr<Tape> out;
 
-    static std::shared_ptr<TextTape> tmp_1;
-    static std::shared_ptr<TextTape> tmp_2;
-    static std::shared_ptr<TextTape> tmp_3;
+    static std::shared_ptr<Tape> tmp_1;
+    static std::shared_ptr<Tape> tmp_2;
+    static std::shared_ptr<Tape> tmp_3;
 
-    static std::shared_ptr<TextTape> curr_tmp_tape;
-    static std::shared_ptr<TextTape> curr_in_tape;
+    /// Variable for easy switching between temporary tapes 1 and 2
+    static std::shared_ptr<Tape> curr_tmp_tape;
+    /// Variable for easy switching between input tapes 1 and temporary tape 3
+    static std::shared_ptr<Tape> curr_in_tape;
 
+    /** @brief Splits one tape into 2 tapes
+     *  @details Writes ordered values to one of two tapes. <br>
+     *  When the next value is knocked out of the ordered sequence, changes the tape.
+     **/
     static void split() {
         _sorted = true;
         tmp_1->cells_written = 0;
         tmp_2->cells_written = 0;
-        std::cout << "tmp_3->cells_written=" << tmp_3->cells_written << std::endl;
         curr_tmp_tape = tmp_1;
 
         int32_t prev_val, next_val;
@@ -49,11 +52,12 @@ private:
         }
     }
 
+    /** @brief Merges two tapes into one
+     *  @details Does the Merge Sorting
+     **/
     static void merge() {
         int32_t first_val, second_val;
         tmp_3->cells_written = 0;
-        std::cout << "tmp_1->cells_written=" << tmp_1->cells_written << std::endl;
-        std::cout << "tmp_2->cells_written=" << tmp_2->cells_written << std::endl;
 
         while (!tmp_1->end() && !tmp_2->end() &&
                !tmp_1->logicalEnd() && !tmp_2->logicalEnd()) {
@@ -77,8 +81,6 @@ private:
             }
         }
 
-        std::cout << "One of tapes is over" << std::endl;
-
         while (!tmp_1->end() && !tmp_1->logicalEnd()) {
             first_val = tmp_1->read();
             tmp_1->forward();
@@ -101,7 +103,6 @@ private:
     }
 
     static void switchTmpTapes() {
-        std::cout << "Switching tapes" << std::endl;
         if (curr_tmp_tape == tmp_1)
             curr_tmp_tape = tmp_2;
         else
@@ -110,39 +111,37 @@ private:
 
 public:
     static void sort(std::string_view inputFile, std::string_view outputFile) {
-        in = std::make_unique<TextTape>(inputFile);
-        out = std::make_unique<TextTape>(outputFile);
+        in = std::make_unique<Tape>(inputFile);
+        out = std::make_unique<Tape>(outputFile);
         out->clear();
-        tmp_1 = std::make_unique<TextTape>("../tmp/tmp1.txt");
+        std::filesystem::create_directory("../tmp");
+        tmp_1 = std::make_unique<Tape>("../tmp/tmp1.txt");
         tmp_1->clear();
-        tmp_2 = std::make_unique<TextTape>("../tmp/tmp2.txt");
+        tmp_2 = std::make_unique<Tape>("../tmp/tmp2.txt");
         tmp_2->clear();
-        tmp_3 = std::make_unique<TextTape>("../tmp/tmp3.txt");
+        tmp_3 = std::make_unique<Tape>("../tmp/tmp3.txt");
         tmp_3->clear();
 
         // Load data from input tape into 2 temp tapes
         in->cells_written = std::numeric_limits<uint64_t>::max();
         curr_in_tape = in;
-        std::cout << "\tSplitting" << std::endl;
         split();
         curr_in_tape = tmp_3;
 
         // Sort data using 3 temp tapes:
         // two for splitting and third for merging
         while (!_sorted) {
-            std::cout << "\tMerging" << std::endl;
             tmp_1->rewindToBegin();
             tmp_2->rewindToBegin();
             tmp_3->rewindToBegin();
             merge();
-            std::cout << "\tSplitting" << std::endl;
             tmp_1->rewindToBegin();
             tmp_2->rewindToBegin();
             tmp_3->rewindToBegin();
             split();
         }
 
-        // Sorted, writing into output file
+        // All is sorted, write into output file
         tmp_3->rewindToBegin();
         while (!tmp_3->end() && !tmp_3->logicalEnd()) {
             out->write(tmp_3->read());
@@ -152,16 +151,5 @@ public:
         }
     }
 };
-
-bool MergeSort::_sorted{false};
-std::shared_ptr<TextTape> MergeSort::in{};
-std::unique_ptr<TextTape> MergeSort::out{};
-
-std::shared_ptr<TextTape> MergeSort::tmp_1{};
-std::shared_ptr<TextTape> MergeSort::tmp_2{};
-std::shared_ptr<TextTape> MergeSort::tmp_3{};
-
-std::shared_ptr<TextTape> MergeSort::curr_tmp_tape{};
-std::shared_ptr<TextTape> MergeSort::curr_in_tape{};
 
 #endif //YADRO_MERGESORT_HPP

@@ -1,22 +1,26 @@
-#ifndef YADRO_TEXTTAPE_HPP
-#define YADRO_TEXTTAPE_HPP
+#ifndef YADRO_TAPE_HPP
+#define YADRO_TAPE_HPP
 
+#include "pch.h"
 #include "TapeInterface.hpp"
 
-class TextTape : public TapeInterface {
+class Tape : public TapeInterface {
 protected:
+    /// Amount of bytes using to represent single tape cell
     int _cell_size{};
     std::fstream _fs{};
     std::string_view _path{};
     double _read_delay{}, _write_delay{}, _rewind_delay{}, _move_delay{};
 
-    void cur_sym() {
+    /// Helper function
+    [[maybe_unused]] void cursym() {
         std::cout << "Current symbol:"
                   << "\'" << (char) _fs.peek() << "\'"
                   << std::endl;
     }
 
-    void cur_state() {
+    /// Helper function
+    [[maybe_unused]] void curstate() {
         std::cout << "Current state:"
                   << "\tGood:" << _fs.good()
                   << "\tBad:" << _fs.bad()
@@ -26,14 +30,19 @@ protected:
                   << std::endl;
     }
 
+    static void _sleep(double milliseconds) {
+        std::this_thread::sleep_for(std::chrono::duration<double>(milliseconds));
+    }
+
 public:
-    // Amount of written cells in last write session
+    /// Amount of written cells in last write session; The countdown starts from one
     uint64_t cells_written{0};
-    // Current cell
+    /// Offset from the beginning; The countdown starts from zero
     uint64_t current_cell{0};
 
-    explicit TextTape(std::string_view path) :
+    explicit Tape(std::string_view path) :
             TapeInterface() {
+        // 13 is the size of string "+2147483647\r\n" or "-0000000001\r\n"
         _cell_size = 13;
         _path = path;
 
@@ -46,16 +55,16 @@ public:
             throw std::runtime_error(msg);
         }
 
-        TextTape::configure("../Config.txt");
+        Tape::configure("../Config.txt");
     }
 
-    ~TextTape() {
+    ~Tape() {
         _fs.close();
     }
 
     int32_t read() override {
-        if (_fs.eof())
-            std::cerr << "EOF" << std::endl;
+        _sleep(_read_delay);
+
         auto pos = _fs.tellp();
         if (!_fs.is_open()) {
             throw std::runtime_error("File is not opened");
@@ -63,14 +72,22 @@ public:
 
         int32_t val{};
         _fs >> val;
-        std::cout << "Reading value=" << val << std::endl;
 
         _fs.seekp(pos);
         return val;
     }
 
+    static std::string format(int32_t val) {
+        std::stringstream ss{};
+        ss << ((val < 0) ? '-' : '+')
+           << std::setw(10) << std::setfill('0') << llabs(val)
+           << '\n';
+        return ss.str();
+    }
+
     void write(int32_t val) override {
-        std::cout << "Writing value=" << val << std::endl;
+        _sleep(_write_delay);
+
         if (_fs.eof())
             _fs.clear();
 
@@ -79,24 +96,22 @@ public:
             throw std::runtime_error("File is not opened");
         }
 
-        _fs << ((val < 0) ? '-' : '+')
-            << std::setw(10) << std::setfill('0') << abs(val)
-            << '\n';
+        _fs << format(val);
 
         _fs.seekp(pos);
     }
 
-    auto pos() {
-        return _fs.tellp();
-    }
-
     void forward() override {
+        _sleep(_move_delay);
+
         auto pos = _fs.tellp();
         pos += _cell_size;
         _fs.seekp(pos);
     }
 
     void backward() override {
+        _sleep(_move_delay);
+
         auto pos = _fs.tellp();
         if (pos == 0)
             return;
@@ -106,6 +121,8 @@ public:
     }
 
     void rewind(int32_t val) override {
+        _sleep(_rewind_delay);
+
         auto pos = _fs.tellp();
         pos += _cell_size * val;
         if (pos < 0)
@@ -123,6 +140,8 @@ public:
     }
 
     void rewindToBegin() override {
+        _sleep(_rewind_delay);
+
         if (_fs.eof())
             _fs.clear();
         _fs.seekp(0);
@@ -134,8 +153,6 @@ public:
     }
 
     bool logicalEnd() override {
-        std::cout << "\tcurrent_cell=" << current_cell
-                  << "; cells_written=" << cells_written << std::endl;
         return current_cell >= cells_written;
     }
 
@@ -152,4 +169,4 @@ public:
     }
 };
 
-#endif //YADRO_TEXTTAPE_HPP
+#endif //YADRO_TAPE_HPP

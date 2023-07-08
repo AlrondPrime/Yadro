@@ -1,12 +1,13 @@
-#include "BinaryTape.hpp"
-#include "TextTape.hpp"
 #include "MergeSort.hpp"
+#include "gtest/gtest.h"
 
 // int32_t : -2147483648 ~ 2147483647
 int main(int argc, char *argv[]) {
     try {
+        ::testing::InitGoogleTest(&argc, argv);
         std::ios_base::sync_with_stdio(false);
 
+        // Parse command-line arguments
         std::string input_file, output_file;
         bpo::options_description description("Positional arguments");
         description.add_options()
@@ -22,31 +23,20 @@ int main(int argc, char *argv[]) {
                            .positional(positional_options).run(), variables_map);
         variables_map.notify();
 
-        // Generate some test data
-        {
-            TextTape textTape{input_file};
-            textTape.clear();
-
-            textTape.write(1);
-            textTape.forward();
-            textTape.write(7);
-            textTape.forward();
-            textTape.write(2);
-            textTape.forward();
-            textTape.write(6);
-            textTape.forward();
-            textTape.write(3);
-            textTape.forward();
-            textTape.write(5);
-            textTape.forward();
-            textTape.write(4);
+        if (!std::filesystem::exists(input_file)) {
+            std::cerr << "File \'" << input_file << "\' does not exist." << std::endl;
+            return 0;
         }
+
+        std::ofstream file_creator{output_file, std::fstream::trunc};
+        file_creator.close();
 
         MergeSort::sort(input_file, output_file);
     }
     catch (std::exception &e) {
         std::cerr << e.what() << std::endl;
+        return -1;
     }
 
-    return 0;
+    return RUN_ALL_TESTS();
 }

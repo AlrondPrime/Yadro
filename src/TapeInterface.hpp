@@ -1,8 +1,6 @@
 #ifndef YADRO_TAPEINTERFACE_HPP
 #define YADRO_TAPEINTERFACE_HPP
 
-#include "pch.h"
-
 class TapeInterface {
 public:
     virtual int32_t read() = 0;
