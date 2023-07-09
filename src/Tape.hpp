@@ -46,6 +46,12 @@ public:
         _cell_size = 13;
         _path = path;
 
+        // Create a file if it does not exist
+        if (!std::filesystem::exists(path)) {
+            std::ofstream file_creator{path.data()};
+            file_creator.close();
+        }
+
         _fs.open(_path);
         if (!_fs.is_open()) {
             std::string msg;
