@@ -28,9 +28,6 @@ int main(int argc, char *argv[]) {
             return 0;
         }
 
-        std::ofstream file_creator{output_file, std::fstream::trunc};
-        file_creator.close();
-
         MergeSort::sort(input_file, output_file);
     }
     catch (std::exception &e) {

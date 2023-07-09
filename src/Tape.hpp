@@ -40,9 +40,8 @@ public:
     /// Offset from the beginning; The countdown starts from zero
     uint64_t current_cell{0};
 
-    explicit Tape(std::string_view path) :
-            TapeInterface() {
-        // 13 is the size of string "+2147483647\r\n" or "-0000000001\r\n"
+    explicit Tape(std::string_view path) {
+        // 13 is the size of string "+2147483647\r\n" or "-2147483648\r\n"
         _cell_size = 13;
         _path = path;
 
@@ -154,7 +153,7 @@ public:
         current_cell = 0;
     }
 
-    virtual bool end() override {
+    bool end() override {
         return _fs.peek() == EOF;
     }
 

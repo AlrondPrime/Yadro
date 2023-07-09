@@ -15,7 +15,7 @@ private:
 
     /// Variable for easy switching between temporary tapes 1 and 2
     static std::shared_ptr<Tape> curr_tmp_tape;
-    /// Variable for easy switching between input tapes 1 and temporary tape 3
+    /// Variable for easy switching between input tape 1 and temporary tape 3
     static std::shared_ptr<Tape> curr_in_tape;
 
     /** @brief Splits one tape into 2 tapes
@@ -122,13 +122,13 @@ public:
         tmp_3 = std::make_unique<Tape>("../tmp/tmp3.txt");
         tmp_3->clear();
 
-        // Load data from input tape into 2 temp tapes
+        // Split data from input tape into 2 temporary tapes
         in->cells_written = std::numeric_limits<uint64_t>::max();
         curr_in_tape = in;
         split();
         curr_in_tape = tmp_3;
 
-        // Sort data using 3 temp tapes:
+        // Sort data using 3 temporary tapes:
         // two for splitting and third for merging
         while (!_sorted) {
             tmp_1->rewindToBegin();
